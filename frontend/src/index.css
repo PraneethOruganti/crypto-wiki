@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+
+.katex-display {
+  margin: 1em 0;
+}
+
+.katex {
+  font-size: 1.1em;
+}
+
+/* Ensure proper spacing in definition cards */
+.crypto-definition .katex-display {
+  margin: 0.5em 0;
+}
