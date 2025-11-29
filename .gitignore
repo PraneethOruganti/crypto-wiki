@@ -1,2 +1,19 @@
-node_modules/
+# backend
+backend/generated/
+backend/node_modules/
+backend/.env*
+
+
+# frontend
+frontend/.tanstack
+frontend/node_modules
+frontend/*.log
+frontend/dist/
+frontend/build/
+
+# misc
 .DS_Store
+.vscode/
+*.log
+dist/
+build/

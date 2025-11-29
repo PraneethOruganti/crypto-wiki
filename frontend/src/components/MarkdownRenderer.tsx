@@ -1,24 +1,19 @@
 import ReactMarkdown from 'react-markdown';
-import { MathJax, MathJaxContext } from 'better-react-mathjax';
-import RemarkMathPlugin from 'remark-math';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 interface MarkdownRendererProps {
   content: string;
+  macros?: Record<string, string>;
 }
 
-function MarkdownRenderer({ content }: MarkdownRendererProps) {
+//
+function MarkdownRenderer({ content, macros = {} }: MarkdownRendererProps) {
   return (
-    <MathJaxContext>
-      <ReactMarkdown
-        components={{
-          // Block math
-          math: ({ value }) => <MathJax dynamic>{`\\[${value}\\]`}</MathJax>,
-          // Inline math
-          inlineMath: ({ value }) => <MathJax dynamic>{`\\(${value}\\)`}</MathJax>,
-        }}
-        remarkPlugins={[RemarkMathPlugin]}
-      ></ReactMarkdown>
-    </MathJaxContext>
+    <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[[rehypeKatex, { macros }]]}>
+      {content}
+    </ReactMarkdown>
   );
 }
 
