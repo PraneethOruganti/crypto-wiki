@@ -7,11 +7,75 @@ datasource db {
   provider = "postgresql"
 }
 
+// high-level concept of a definition (e.g. pseudorandom function: prf)
 model Definition {
-  id        Int      @id @default(autoincrement())
-  title     String
-  category  String?
-  bodyLatex String
+  // a given definition holds metadata about the concept, no actual LaTeX though
+  id    Int    @id @default(autoincrement())
+  title String @unique
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // a given definition can have many different versions
+  versions DefinitionVersion[]
+
+  // a given definition can also have many different categories (think of them as tags)
+  categories Category[]
 }
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  // a given category can belong to many different definitions (many-to-many)
+  definitions Definition[]
+}
+
+// one particular, concrete version of a definition, contains actual LaTeX
+model DefinitionVersion {
+  id        Int      @id @default(autoincrement())
+  slug      String
+  bodyLatex String
+  isDefault Boolean
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // every definitionVersion must belong to exactly one definition
+  definition   Definition @relation(fields: [definitionId], references: [id])
+  definitionId Int
+
+  // every default version can have one or no defaultMacroSet (so when a def version is requested, if no macro set is specified, it is rendered with a defaultmacroset if it exists, no macros if it doesn't exist. if a macro set is specified, render with that instead)
+  defaultMacroSet   MacroSet? @relation(fields: [defaultMacroSetId], references: [id])
+  defaultMacroSetId Int?
+
+  // citation field that represents whichever paper this definition version originated from (however, think about if the paper hasn't been published yet but we are adding defn.)
+
+  @@unique([definitionId, slug]) // prevents duplicate slugs (version names) within one definitionId
+  @@unique([definitionId, order]) // prevents duplicate orders within one definitionId
+}
+
+model MacroSet {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid()) // used for URL references since it is universally unique
+  name      String?
+  macros    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // this macro set can be referenced by many definition versions
+  versions DefinitionVersion[]
+}
+
+// TODO: flesh this out more
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // If eventually we want to track who authored what:
+  // definitions Definition[]?
+}
+
+// version history here
