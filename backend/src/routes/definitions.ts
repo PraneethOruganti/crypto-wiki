@@ -2,27 +2,6 @@ import { FastifyInstance } from 'fastify';
 import { prisma } from '../../lib/prisma';
 import { UUID } from 'node:crypto';
 
-type Definition = {
-  id: number;
-  title: string;
-  catgories: string[];
-};
-
-type DefinitionVersion = {
-  versionSlug: string;
-  bodyLatex: string;
-  isDefault: boolean;
-  macros: Record<string, string>;
-};
-
-type ConcreteDefinition = {
-  title: string;
-  categories: string[];
-  bodyLatex: string;
-  macros: Record<string, string>;
-  versionSlug: string;
-};
-
 export async function definitionRoutes(fastify: FastifyInstance) {
   // get all default versions of definitions
   fastify.get('/definitions', async () => {
@@ -93,8 +72,14 @@ export async function definitionRoutes(fastify: FastifyInstance) {
       });
     }
 
-    let macroSet;
+    // also fetch all available versions for this definition
+    const versionsMetadata = await prisma.definitionVersion.findMany({
+      where: { definitionId: definition.id },
+      select: { slug: true, order: true, isDefault: true },
+      orderBy: { order: 'asc' },
+    });
 
+    let macroSet;
     if (macroUUID) {
       // a macroset is specified, try to find that one.
       macroSet = await prisma.macroSet.findUnique({ where: { uuid: macroUUID } });
@@ -115,6 +100,7 @@ export async function definitionRoutes(fastify: FastifyInstance) {
       versionSlug: definitionVersion.slug,
       bodyLatex: definitionVersion.bodyLatex,
       macros: (macroSet?.macros as Record<string, string>) || {},
+      versions: versionsMetadata,
     };
 
     return defResponse;
@@ -295,6 +281,5 @@ export async function definitionRoutes(fastify: FastifyInstance) {
   //     message: 'Deleted successfully',
   //   };
   // });
-
-  // Macro set CRUD as well
+  // TODO: Macro set CRUD as well
 }
